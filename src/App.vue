@@ -22,6 +22,10 @@
       <img :src="resultImage" />
       <a :href="resultImage" download="relic-list.png">ダウンロード</a>
     </div>
+
+    <footer class="site-footer">
+      <a href="https://mayholiholi.github.io/" target="_blank" rel="noopener noreferrer">mayholiholi</a>
+    </footer>
   </div>
 </template>
 
@@ -107,5 +111,17 @@ export default {
   max-width: 150px;
   margin: 5px;
   border: 1px solid #ccc;
+}
+.site-footer {
+  margin-top: 32px;
+  padding: 16px;
+}
+.site-footer a {
+  color: #888;
+  font-size: 13px;
+  text-decoration: none;
+}
+.site-footer a:hover {
+  color: #aaa;
 }
 </style>
