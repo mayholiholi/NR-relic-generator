@@ -1,12 +1,10 @@
 # NR Relic Generator
 
+https://mayholiholi.github.io/NR-relic-generator/
+
 ELDEN RING NIGHTREIGN に登場する遺物アイテムの一覧画像を生成するツール。
 
 複数のスクリーンショットをアップロードすると、遺物部分を自動で切り抜いて一覧画像として合成・ダウンロードできる。
-
-## デモ
-
-https://mayholiholi.github.io/NR-relic-generator/
 
 ## 使い方
 
