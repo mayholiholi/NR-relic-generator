@@ -1,13 +1,510 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>遺物一覧ジェネレーター</title>
-    <script type="module" crossorigin src="/NR-relic-generator/assets/index-5tA2M-Bv.js"></script>
-    <link rel="stylesheet" crossorigin href="/NR-relic-generator/assets/index-CTBTAB3z.css">
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 880px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.3em;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field.grow { flex: 1; min-width: 200px; }
+
+        .field label {
+            font-size: 0.78em;
+            font-weight: 600;
+            color: #aaa;
+        }
+
+        .drop-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 28px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #999;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .drop-zone:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #ccc;
+        }
+
+        .drop-zone.dragover {
+            background: rgba(124, 108, 240, 0.12);
+            border-color: #7c6cf0;
+            color: #c4b8ff;
+        }
+
+        .drop-zone input { display: none; }
+
+        .drop-zone-icon {
+            font-size: 1.6em;
+            line-height: 1;
+        }
+
+        .file-count {
+            font-size: 0.78em;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .col-input {
+            width: 72px;
+            padding: 10px 12px;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #e0e0e0;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .col-input:focus {
+            border-color: #7c6cf0;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            font-size: 0.9em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7c6cf0, #5a4fcf);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .preview-grid img {
+            width: 100%;
+            aspect-ratio: 620 / 750;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .result { text-align: center; }
+
+        .result img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #34d399, #059669);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: opacity 0.2s;
+        }
+
+        .download-link:hover { opacity: 0.85; }
+
+        .usage {
+            margin-top: 20px;
+            font-size: 0.82em;
+            color: #999;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0;
+        }
+
+        .usage summary {
+            cursor: pointer;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #aaa;
+            list-style: none;
+        }
+
+        .usage summary::before {
+            content: '▶ ';
+            font-size: 0.7em;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .usage[open] summary::before {
+            content: '▼ ';
+        }
+
+        .usage summary::-webkit-details-marker { display: none; }
+
+        .usage ol {
+            padding: 0 16px 16px 36px;
+            line-height: 1.8;
+        }
+
+        .usage ol small {
+            color: #666;
+        }
+
+        .usage-note {
+            padding: 0 16px 14px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .usage-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            flex-wrap: wrap;
+        }
+
+        .usage-diagram svg {
+            flex-shrink: 0;
+        }
+
+        .usage-arrow {
+            color: #666;
+            font-size: 1.4em;
+            flex-shrink: 0;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>遺物一覧ジェネレーター</h1>
+            <p class="subtitle">ELDEN RING NIGHTREIGN</p>
+
+            <div id="drop-zone" class="drop-zone">
+                <div class="drop-zone-icon">+</div>
+                <div>ここに画像をドラッグ＆ドロップ<br>またはクリックして選択</div>
+                <input type="file" id="file-input" multiple accept="image/*">
+                <div id="file-count" class="file-count"></div>
+            </div>
+
+            <div class="controls" style="margin-top: 16px;">
+                <div class="field">
+                    <label for="col-input">列数</label>
+                    <input type="number" id="col-input" class="col-input" value="3" min="1" max="20">
+                </div>
+                <button id="generate-btn" class="btn" disabled>合成</button>
+            </div>
+
+            <div id="preview-section" class="hidden">
+                <div id="preview-grid" class="preview-grid"></div>
+            </div>
+
+            <details class="usage">
+                <summary>使い方</summary>
+
+                <div class="usage-diagram">
+                    <!-- Step1: ゲーム画面のスクショ（遺物ステータス画面のシルエット） -->
+                    <svg width="160" height="100" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 画面背景 -->
+                        <rect width="320" height="200" rx="6" fill="#1a1520"/>
+                        <rect x="2" y="2" width="316" height="196" rx="5" fill="none" stroke="#3a3040" stroke-width="1.5"/>
+                        <!-- 遺物エリア（左側）切り抜き対象 -->
+                        <rect x="16" y="30" width="120" height="150" rx="4" fill="#252030" stroke="#c8a84e" stroke-width="1.5" stroke-dasharray="5 3"/>
+                        <!-- 遺物アイコン（剣のシルエット） -->
+                        <g transform="translate(76, 85)" fill="#c8a84e" opacity="0.5">
+                            <rect x="-3" y="-30" width="6" height="50" rx="2"/>
+                            <rect x="-14" y="14" width="28" height="5" rx="2"/>
+                            <rect x="-5" y="19" width="10" height="12" rx="1"/>
+                        </g>
+                        <!-- 遺物名テキスト -->
+                        <rect x="36" y="130" width="80" height="6" rx="3" fill="#c8a84e" opacity="0.3"/>
+                        <!-- 右側ステータスエリア -->
+                        <rect x="155" y="36" width="70" height="5" rx="2" fill="#555" opacity="0.4"/>
+                        <rect x="155" y="48" width="90" height="4" rx="2" fill="#444" opacity="0.3"/>
+                        <rect x="155" y="58" width="80" height="4" rx="2" fill="#444" opacity="0.3"/>
+                        <rect x="155" y="68" width="85" height="4" rx="2" fill="#444" opacity="0.3"/>
+                        <rect x="155" y="84" width="60" height="5" rx="2" fill="#555" opacity="0.4"/>
+                        <rect x="155" y="96" width="140" height="3" rx="1.5" fill="#444" opacity="0.2"/>
+                        <rect x="155" y="104" width="135" height="3" rx="1.5" fill="#444" opacity="0.2"/>
+                        <rect x="155" y="112" width="140" height="3" rx="1.5" fill="#444" opacity="0.2"/>
+                        <rect x="155" y="120" width="100" height="3" rx="1.5" fill="#444" opacity="0.2"/>
+                        <!-- ラベル -->
+                        <text x="160" y="192" fill="#888" font-size="11" text-anchor="middle" font-family="sans-serif">スクリーンショット</text>
+                    </svg>
+
+                    <span class="usage-arrow">→</span>
+
+                    <!-- Step2: 切り抜かれた遺物カード -->
+                    <svg width="64" height="100" viewBox="0 0 124 160" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="124" height="150" rx="4" fill="#252030" stroke="#c8a84e" stroke-width="1.5"/>
+                        <!-- 遺物アイコン（杖のシルエット） -->
+                        <g transform="translate(62, 60)" fill="#c8a84e" opacity="0.5">
+                            <rect x="-3" y="-32" width="6" height="55" rx="2"/>
+                            <circle cx="0" cy="-36" r="8" fill="none" stroke="#c8a84e" stroke-width="2" opacity="0.4"/>
+                            <rect x="-5" y="23" width="10" height="8" rx="1"/>
+                        </g>
+                        <!-- 名前 -->
+                        <rect x="22" y="112" width="80" height="6" rx="3" fill="#c8a84e" opacity="0.3"/>
+                        <!-- ラベル -->
+                        <text x="62" y="148" fill="#888" font-size="11" text-anchor="middle" font-family="sans-serif">切り抜き</text>
+                    </svg>
+
+                    <span class="usage-arrow">→</span>
+
+                    <!-- Step3: 3列に合成された一覧 -->
+                    <svg width="120" height="100" viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 3x2グリッド -->
+                        <!-- Row1 -->
+                        <rect x="2" y="2" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(40, 36)" fill="#c8a84e" opacity="0.4">
+                            <rect x="-2.5" y="-20" width="5" height="36" rx="2"/>
+                            <rect x="-10" y="12" width="20" height="4" rx="2"/>
+                        </g>
+                        <rect x="16" y="62" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <rect x="82" y="2" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(120, 36)" fill="#c8a84e" opacity="0.4">
+                            <circle cx="0" cy="-8" r="14" fill="none" stroke="#c8a84e" stroke-width="2" opacity="0.4"/>
+                            <rect x="-2" y="6" width="4" height="16" rx="1"/>
+                        </g>
+                        <rect x="96" y="62" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <rect x="162" y="2" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(200, 36)" fill="#c8a84e" opacity="0.4">
+                            <rect x="-14" y="-10" width="28" height="6" rx="2"/>
+                            <rect x="-10" y="0" width="20" height="18" rx="2"/>
+                        </g>
+                        <rect x="176" y="62" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <!-- Row2 -->
+                        <rect x="2" y="94" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(40, 128)" fill="#c8a84e" opacity="0.4">
+                            <polygon points="0,-18 12,10 -12,10"/>
+                        </g>
+                        <rect x="16" y="154" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <rect x="82" y="94" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(120, 128)" fill="#c8a84e" opacity="0.4">
+                            <rect x="-3" y="-22" width="6" height="40" rx="2"/>
+                            <rect x="-12" y="10" width="24" height="5" rx="2"/>
+                            <rect x="-5" y="15" width="10" height="8" rx="1"/>
+                        </g>
+                        <rect x="96" y="154" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <rect x="162" y="94" width="76" height="88" rx="3" fill="#252030" stroke="#3a3040" stroke-width="1"/>
+                        <g transform="translate(200, 128)" fill="#c8a84e" opacity="0.4">
+                            <ellipse cx="0" cy="-4" rx="16" ry="12" fill="none" stroke="#c8a84e" stroke-width="2" opacity="0.4"/>
+                        </g>
+                        <rect x="176" y="154" width="44" height="4" rx="2" fill="#c8a84e" opacity="0.2"/>
+
+                        <!-- ラベル -->
+                        <text x="120" y="196" fill="#888" font-size="11" text-anchor="middle" font-family="sans-serif">一覧画像として合成</text>
+                    </svg>
+                </div>
+
+                <ol>
+                    <li>NIGHTREIGNのゲーム内で遺物ステータス画面を開き、スクリーンショットを撮る<br><small>フルスクリーン・標準UIスケールで撮影すること（座標固定のため）</small></li>
+                    <li>上のエリアに画像をドラッグ＆ドロップ、またはクリックして選択</li>
+                    <li>列数を指定して「合成」ボタンをクリック</li>
+                    <li>生成された一覧画像を「ダウンロード」で保存</li>
+                </ol>
+                <p class="usage-note">画像はすべてブラウザ内で処理され、外部に送信されません</p>
+            </details>
+        </div>
+
+        <div id="result-section" class="card result hidden">
+            <img id="result-img" src="" alt="合成結果">
+            <br>
+            <a id="download-link" class="download-link" href="" download="relic-list.png">ダウンロード</a>
+        </div>
+    </div>
+
+    <script>
+        var CROP = { x: 104, y: 245, w: 620, h: 750 };
+
+        var dropZone = document.getElementById('drop-zone');
+        var fileInput = document.getElementById('file-input');
+        var fileCount = document.getElementById('file-count');
+        var colInput = document.getElementById('col-input');
+        var generateBtn = document.getElementById('generate-btn');
+        var previewSection = document.getElementById('preview-section');
+        var previewGrid = document.getElementById('preview-grid');
+        var resultSection = document.getElementById('result-section');
+        var resultImg = document.getElementById('result-img');
+        var downloadLink = document.getElementById('download-link');
+
+        var loadedImages = [];
+
+        function handleFiles(files) {
+            files = Array.from(files).filter(function(f) {
+                return f.type.startsWith('image/');
+            });
+
+            loadedImages = [];
+            previewGrid.innerHTML = '';
+            resultSection.classList.add('hidden');
+
+            if (files.length === 0) {
+                generateBtn.disabled = true;
+                previewSection.classList.add('hidden');
+                fileCount.textContent = '';
+                return;
+            }
+
+            fileCount.textContent = files.length + ' 枚選択中';
+            previewSection.classList.remove('hidden');
+
+            // 順序を保持するため、配列をあらかじめ確保してインデックスで格納
+            var remaining = files.length;
+            loadedImages = new Array(files.length);
+
+            files.forEach(function(file, i) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onload = function() {
+                        loadedImages[i] = img;
+                        remaining--;
+                        if (remaining === 0) generateBtn.disabled = false;
+                    };
+                    img.src = e.target.result;
+
+                    var preview = document.createElement('img');
+                    preview.src = e.target.result;
+                    previewGrid.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // クリックでファイル選択
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        // D&D
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        generateBtn.addEventListener('click', function() {
+            var images = loadedImages.filter(Boolean);
+            if (images.length === 0) return;
+
+            var cols = Math.max(1, parseInt(colInput.value) || 3);
+            var rows = Math.ceil(images.length / cols);
+
+            var canvas = document.createElement('canvas');
+            canvas.width = CROP.w * cols;
+            canvas.height = CROP.h * rows;
+            var ctx = canvas.getContext('2d');
+
+            for (var i = 0; i < images.length; i++) {
+                var col = i % cols;
+                var row = Math.floor(i / cols);
+                ctx.drawImage(
+                    images[i],
+                    CROP.x, CROP.y, CROP.w, CROP.h,
+                    col * CROP.w, row * CROP.h, CROP.w, CROP.h
+                );
+            }
+
+            var dataUrl = canvas.toDataURL('image/png');
+            resultImg.src = dataUrl;
+            downloadLink.href = dataUrl;
+            resultSection.classList.remove('hidden');
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
 </html>
